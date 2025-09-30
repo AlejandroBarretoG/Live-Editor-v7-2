@@ -1,0 +1,221 @@
+/* --- ESTILOS GENERALES Y DE PANELES --- */
+.floating-panel {
+    resize: both;
+    overflow: hidden;
+    z-index: 10000;
+}
+.floating-panel.panel-compactado {
+    height: auto !important;
+    resize: none;
+}
+.floating-panel.panel-compactado .panel-content {
+    display: none;
+}
+.panel-header {
+    cursor: move !important;
+}
+/* Paneles no deben ser seleccionables por el inspector */
+.floating-panel, .floating-panel * {
+    cursor: default !important;
+}
+
+/* --- ESTILOS DEL INSPECTOR --- */
+.elemento-inspeccion-seleccionado {
+    outline: 2px dashed #f43f5e !important;
+    outline-offset: 2px;
+}
+body.inspector-activo, body.inspector-activo * {
+    cursor: crosshair;
+}
+#toggle-inspector-btn.active {
+    background-color: #a5b4fc;
+    color: white;
+}
+
+/* --- ESTILOS PARA LA VISTA DE ÁRBOL --- */
+#tree-view-root ul { padding-left: 1em; border-left: 1px solid #e5e7eb; }
+#tree-view-root li { list-style: none; position: relative; }
+#tree-view-root .tree-node { padding: 2px 4px; border-radius: 4px; cursor: pointer !important; display: flex; align-items: center; white-space: nowrap; }
+#tree-view-root .tree-node:hover { background-color: #f3f4f6; }
+#tree-view-root .tree-node.seleccionado { background-color: #fecaca; font-weight: bold; }
+#tree-view-root .toggle { width: 1em; height: 1em; display: inline-block; text-align: center; line-height: 1em; margin-right: 4px; font-family: monospace; font-weight: bold; border: 1px solid #ccc; border-radius: 2px; flex-shrink: 0; }
+#tree-view-root .toggle.collapsed::before { content: '+'; }
+#tree-view-root .toggle.expanded::before { content: '-'; }
+#tree-view-root ul.collapsed { display: none; }
+#tree-view-root .tree-node-label {
+    background-color: #ede9fe; /* violet-100 */
+    color: #6d28d9; /* violet-700 */
+    font-size: 10px;
+    font-weight: 500;
+    padding: 1px 6px;
+    border-radius: 9999px; /* rounded-full */
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+/* --- ESTILOS PARA EDITOR DE TABLAS --- */
+.resizable-table {
+    border-collapse: collapse;
+}
+.resizable-table td, .resizable-table th {
+    position: relative;
+}
+.resize-handlers-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 100;
+}
+.col-resize-handler {
+    position: absolute;
+    top: 0;
+    width: 8px;
+    height: 100%;
+    cursor: col-resize;
+    pointer-events: all;
+    background: rgba(100, 100, 255, 0.0);
+    transition: background 0.2s;
+}
+.col-resize-handler:hover {
+    background: rgba(100, 100, 255, 0.3);
+}
+.row-resize-handler {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 8px;
+    cursor: row-resize;
+    pointer-events: all;
+    background: rgba(100, 100, 255, 0.0);
+    transition: background 0.2s;
+}
+.row-resize-handler:hover {
+    background: rgba(100, 100, 255, 0.3);
+}
+
+/* --- ESTILOS PARA EDITOR DE GRID --- */
+.grid-resize-handler-col {
+    position: absolute;
+    top: 0;
+    width: 8px;
+    height: 100%;
+    cursor: col-resize;
+    pointer-events: all;
+    background: rgba(0, 128, 0, 0.0); /* Verde para diferenciar */
+    transition: background 0.2s;
+    z-index: 10;
+}
+.grid-resize-handler-col:hover {
+    background: rgba(0, 128, 0, 0.3);
+}
+.grid-resize-handler-row {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 8px;
+    cursor: row-resize;
+    pointer-events: all;
+    background: rgba(0, 128, 0, 0.0);
+    transition: background 0.2s;
+    z-index: 10;
+}
+.grid-resize-handler-row:hover {
+    background: rgba(0, 128, 0, 0.3);
+}
+
+/* --- ESTILOS PARA EDITOR DE FLEXBOX --- */
+.flex-resize-handler-col {
+    position: absolute;
+    top: 0;
+    right: -4px;
+    width: 8px;
+    height: 100%;
+    cursor: col-resize;
+    pointer-events: all;
+    background: rgba(255, 165, 0, 0.0); /* Naranja para diferenciar */
+    transition: background 0.2s;
+    z-index: 30;
+}
+.flex-resize-handler-col:hover {
+    background: rgba(255, 165, 0, 0.4);
+}
+.flex-resize-handler-row {
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 100%;
+    height: 8px;
+    cursor: row-resize;
+    pointer-events: all;
+    background: rgba(255, 165, 0, 0.0);
+    transition: background 0.2s;
+    z-index: 20;
+}
+.flex-resize-handler-row:hover {
+    background: rgba(255, 165, 0, 0.4);
+}
+
+/* --- ESTILOS: Herramienta de redimensión visual --- */
+#resizer-box {
+    position: absolute;
+    border: 1px solid #3b82f6; /* blue-500 */
+    pointer-events: none;
+    z-index: 9998;
+    box-sizing: border-box;
+}
+.resizer-handle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: #3b82f6;
+    border: 1px solid white;
+    border-radius: 50%;
+    pointer-events: auto;
+    z-index: 9999;
+}
+.resizer-handle.top-center { top: -5px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+.resizer-handle.bottom-center { bottom: -5px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+.resizer-handle.left-center { top: 50%; left: -5px; transform: translateY(-50%); cursor: ew-resize; }
+.resizer-handle.right-center { top: 50%; right: -5px; transform: translateY(-50%); cursor: ew-resize; }
+
+/* --- ESTILOS PARA ETIQUETAS DE VARIABLES --- */
+[data-label] {
+    position: relative; 
+}
+
+[data-label]::before {
+    content: attr(data-label);
+    position: absolute;
+    top: -22px;
+    left: 0;
+    background-color: #f59e0b; /* Color ámbar */
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    white-space: nowrap;
+    z-index: 9999;
+    pointer-events: none;
+}
+
+/* --- ESTILOS PARA CONTROLES DE PANEL DE ESTILOS --- */
+.padding-link-btn svg, .margin-link-btn svg {
+    color: #9ca3af; /* gray-400 */
+}
+
+.padding-link-btn:hover svg, .margin-link-btn:hover svg {
+    color: #374151; /* gray-700 */
+}
+
+.padding-link-btn.is-linked svg, .margin-link-btn.is-linked svg {
+    color: #3b82f6; /* blue-500 */
+}
+
+#typo-style-group button.active, #typo-align-group button.active,
+[data-mode].active {
+    background-color: #dbeafe; /* blue-100 */
+    color: #1e40af; /* blue-800 */
+    border-color: #93c5fd; /* blue-300 */
+}
