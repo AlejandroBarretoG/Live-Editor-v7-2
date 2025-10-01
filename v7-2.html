@@ -164,7 +164,8 @@
                 });
 
                 function reiniciarTodo() {
-                    inspectorCore.reiniciarInspeccionSimple();
+                    const selectedElement = inspectorCore.getSelectedElement();
+                    inspectorCore.refreshUIForElement(selectedElement);
                     if (treeViewManager) treeViewManager.rebuildTree();
                 }
 

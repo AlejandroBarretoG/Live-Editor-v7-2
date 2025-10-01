@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Undo UX Test</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+    <div id="main-content-wrapper">
+        <div class="container mx-auto p-8">
+            <h1 class="text-2xl font-bold">Undo UX Test Page</h1>
+            <p>This page is for automated testing of the undo/redo user experience.</p>
+            <div id="test-target" class="mt-8 p-4 bg-white shadow" style="width: 200px; height: 100px; border: 1px solid #ccc;">
+                Inspect Me
+            </div>
+        </div>
+    </div>
+
+    <script src="../script_manager.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.addEventListener('modulesLoaded', () => {
+                console.log('--- Starting Undo UX Test ---');
+
+                let testPassed = true;
+                function assert(condition, message) {
+                    if (!condition) {
+                        console.error(`❌ FAIL: ${message}`);
+                        testPassed = false;
+                    } else {
+                        console.log(`✅ PASS: ${message}`);
+                    }
+                }
+
+                // 1. ========= FULL EDITOR INITIALIZATION =========
+                window.EditorTools.UIManager.init();
+
+                const mainContentWrapper = document.getElementById('main-content-wrapper');
+                const treeViewRoot = document.getElementById('tree-view-root');
+
+                // Forward declaration for the callback
+                let inspectorCore;
+                let treeViewManager;
+
+                const historyManager = new window.EditorTools.HistoryManager(mainContentWrapper, () => {
+                    const selectedElement = inspectorCore.getSelectedElement();
+                    inspectorCore.refreshUIForElement(selectedElement);
+                    if (treeViewManager) treeViewManager.rebuildTree();
+                });
+
+                treeViewManager = new window.EditorTools.DomTreeViewManager(treeViewRoot, mainContentWrapper);
+
+                const propertiesPanel = new window.EditorTools.PropertiesPanelManager({
+                    panelCodigo: document.getElementById('panel-codigo'),
+                    contenidoCodigo: document.getElementById('contenido-codigo'),
+                    analysisContainer: document.getElementById('element-analysis-in-code'),
+                    codigoHtmlToggle: document.getElementById('codigo-html-toggle'),
+                    elementAnalysisToggle: document.getElementById('element-analysis-toggle')
+                });
+
+                const stylePanelManager = new window.EditorTools.StylePanelManager({
+                    historyManager: historyManager
+                });
+
+                inspectorCore = new window.EditorTools.InspectorCore({
+                    treeViewManager: treeViewManager,
+                    historyManager: historyManager,
+                    propertiesPanel: propertiesPanel,
+                    stylePanelManager: stylePanelManager
+                });
+
+                stylePanelManager.inspectorCore = inspectorCore;
+
+                window.EditorTools.initPanels();
+                treeViewManager.init();
+                propertiesPanel.init();
+                stylePanelManager.init();
+                inspectorCore.init();
+                historyManager.saveState();
+
+                // 2. ========= TEST EXECUTION =========
+
+                const targetElement = document.getElementById('test-target');
+                const stylePanel = document.getElementById('style-panel');
+
+                // Step 1: Simulate selecting the element
+                console.log('Simulating click on target element...');
+                targetElement.click();
+
+                assert(inspectorCore.getSelectedElement() === targetElement, "Target element should be selected.");
+                assert(stylePanel && !stylePanel.classList.contains('hidden'), 'Style panel should be visible after selection.');
+
+                // Step 2: Change a style and save state
+                console.log('Changing style and saving state...');
+                targetElement.style.backgroundColor = 'rgb(255, 0, 0)'; // red
+                historyManager.saveState();
+
+                assert(historyManager.historyStack.length === 2, "History should have a new state.");
+
+                // Step 3: Perform Undo
+                console.log('Performing undo...');
+                historyManager.undo();
+
+                // Step 4: Verify the fix
+                console.log('Verifying state after undo...');
+                const freshTarget = document.getElementById('test-target'); // Re-fetch the element from the new DOM
+
+                assert(inspectorCore.getSelectedElement() === freshTarget, "Element should remain selected after undo.");
+                assert(stylePanel && !stylePanel.classList.contains('hidden'), 'Style panel should REMAIN visible after undo.');
+                assert(freshTarget.style.backgroundColor !== 'rgb(255, 0, 0)', 'Style change should be reverted.');
+
+                console.log('--- Test Complete ---');
+                if(testPassed) {
+                    console.log('%cAll tests passed!', 'color: green; font-weight: bold;');
+                } else {
+                    console.log('%cSome tests failed.', 'color: red; font-weight: bold;');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

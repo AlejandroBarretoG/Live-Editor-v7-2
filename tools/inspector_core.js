@@ -103,6 +103,58 @@
             return this.inspectorActivo;
         }
         
+        refreshUIForElement(staleElement) {
+            if (!staleElement || !staleElement.dataset.inspectorId) {
+                this.reiniciarInspeccionSimple();
+                return;
+            }
+
+            const inspectorId = staleElement.dataset.inspectorId;
+            const freshElement = document.querySelector(`[data-inspector-id="${inspectorId}"]`);
+
+            if (!freshElement) {
+                this.reiniciarInspeccionSimple();
+                return;
+            }
+
+            if (this.elementoInspeccionado) {
+                this.elementoInspeccionado.classList.remove('elemento-inspeccion-seleccionado');
+            }
+            this.tableEditor.deselectTable();
+            this.gridEditor.deselectGrid();
+            this.flexEditor.deselectFlexContainer();
+            this.resizerManager.hide();
+
+            this.elementoInspeccionado = freshElement;
+            this.elementoInspeccionado.classList.add('elemento-inspeccion-seleccionado');
+
+            const tablaPadre = this.elementoInspeccionado.closest('table');
+            const esGrid = this.elementoInspeccionado.classList.contains('grid');
+            const esFlex = this.elementoInspeccionado.classList.contains('flex');
+            const esHijoDeGrid = this.elementoInspeccionado.parentElement?.classList.contains('grid');
+            const esHijoDeFlex = this.elementoInspeccionado.parentElement?.classList.contains('flex');
+
+            if (tablaPadre) {
+                this.tableEditor.selectTable(tablaPadre);
+            } else if (esGrid) {
+                this.gridEditor.selectGrid(this.elementoInspeccionado);
+            } else if (esFlex) {
+                this.flexEditor.selectFlexContainer(this.elementoInspeccionado);
+            } else if (!esHijoDeGrid && !esHijoDeFlex) {
+                this.resizerManager.show(this.elementoInspeccionado);
+            }
+
+            if (this.treeViewManager) {
+                this.treeViewManager.highlightNodeForElement(this.elementoInspeccionado);
+            }
+            if (this.propertiesPanel) {
+                this.propertiesPanel.show(this.elementoInspeccionado);
+            }
+            if (this.stylePanelManager) {
+                this.stylePanelManager.show(this.elementoInspeccionado);
+            }
+        }
+
         getSelectedElement() {
             return this.elementoInspeccionado;
         }
