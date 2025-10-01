@@ -10,9 +10,11 @@
     class AnalysisViewer {
         /**
          * @param {HTMLElement} containerEl El elemento del DOM donde se renderizará el análisis.
+         * @param {InspectorCore} inspectorCore La instancia del inspector para acceder al historial y al elemento.
          */
-        constructor(containerEl) {
+        constructor(containerEl, inspectorCore) {
             this.analysisContainer = containerEl;
+            this.inspectorCore = inspectorCore;
         }
 
         /**
@@ -62,7 +64,41 @@
                             
                             const valueCell = row.insertCell();
                             valueCell.className = 'w-1/2 font-medium break-all';
-                            valueCell.appendChild(document.createTextNode(item.value));
+
+                            if (titleText === 'Atributos') {
+                                const editableSpan = document.createElement('span');
+                                editableSpan.contentEditable = true;
+                                editableSpan.className = 'p-1 rounded-md hover:bg-yellow-100 focus:bg-yellow-200 outline-none focus:ring-1 focus:ring-yellow-500';
+                                editableSpan.textContent = item.value;
+                                editableSpan.dataset.attributeName = item.name;
+                                valueCell.appendChild(editableSpan);
+
+                                const handleUpdate = () => {
+                                    const attributeName = editableSpan.dataset.attributeName;
+                                    const newValue = editableSpan.textContent.trim();
+                                    const oldValue = el.getAttribute(attributeName);
+
+                                    if (newValue !== oldValue) {
+                                        el.setAttribute(attributeName, newValue);
+                                        if (this.inspectorCore && this.inspectorCore.historyManager) {
+                                            this.inspectorCore.historyManager.saveState();
+                                        }
+                                    }
+                                };
+
+                                editableSpan.addEventListener('blur', handleUpdate);
+                                editableSpan.addEventListener('keydown', e => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        editableSpan.blur();
+                                    } else if (e.key === 'Escape') {
+                                        editableSpan.textContent = el.getAttribute(editableSpan.dataset.attributeName) || '';
+                                        editableSpan.blur();
+                                    }
+                                });
+                            } else {
+                                valueCell.appendChild(document.createTextNode(item.value));
+                            }
 
                             // --- ✅ LÓGICA RESTAURADA DE LA VERSIÓN v6-11 ---
                             // Si la sección es de estilos Tailwind y la función de ayuda existe,

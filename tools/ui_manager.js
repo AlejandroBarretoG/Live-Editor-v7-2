@@ -197,6 +197,15 @@
         panelContainer.id = 'editor-panels-container';
         panelContainer.innerHTML = getPanelsHTML();
         document.body.appendChild(panelContainer);
+
+        // --- REPOSICIONAMIENTO DEL PANEL DE PROPIEDADES ---
+        // Se mueve a la izquierda para evitar solapamiento con el panel del DOM.
+        const panelCodigo = document.getElementById('panel-codigo');
+        if (panelCodigo) {
+            panelCodigo.style.top = '50vh';
+            panelCodigo.style.left = '1rem';
+            panelCodigo.style.right = 'auto'; // Anular el 'right' inline
+        }
     };
 
     window.EditorTools.UIManager = {

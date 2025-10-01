@@ -18,6 +18,7 @@
 
             // ✅ Instanciar el visor de análisis, pasándole su contenedor.
             this.analysisViewer = new window.EditorTools.AnalysisViewer(this.analysisContainer);
+            this.inspectorCore = null; // Se inyectará más tarde.
         }
 
         init() {
@@ -39,7 +40,8 @@
             const escapedHtml = element.outerHTML.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             this.contenidoCodigo.innerHTML = escapedHtml;
             
-            // ✅ Delegar la muestra del análisis al visor.
+            // ✅ Delegar la muestra del análisis al visor, asegurando que tenga la referencia al inspector.
+            this.analysisViewer.inspectorCore = this.inspectorCore;
             this.analysisViewer.show(element);
             
             // --- ✅ LÓGICA MODIFICADA ---

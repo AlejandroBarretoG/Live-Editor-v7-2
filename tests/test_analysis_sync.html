@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Undo UX Test</title>
+    <title>Element Analysis Sync Test</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="../styles.css">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,11 +11,7 @@
 
     <div id="main-content-wrapper">
         <div class="container mx-auto p-8">
-            <h1 class="text-2xl font-bold">Undo UX Test Page</h1>
-            <p>This page is for automated testing of the undo/redo user experience.</p>
-            <div id="test-target" class="mt-8 p-4 bg-white shadow" style="width: 200px; height: 100px; border: 1px solid #ccc;">
-                Inspect Me
-            </div>
+            <h1 id="test-target" data-label="Initial Label" class="text-2xl font-bold">Test Target</h1>
         </div>
     </div>
 
@@ -23,8 +19,8 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            document.addEventListener('modulesLoaded', () => {
-                console.log('--- Starting Undo UX Test ---');
+            document.addEventListener('modulesLoaded', async () => {
+                console.log('--- Starting Element Analysis Sync Test ---');
 
                 let testPassed = true;
                 function assert(condition, message) {
@@ -36,15 +32,18 @@
                     }
                 }
 
+                // Helper to introduce a small delay
+                const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
                 // 1. ========= FULL EDITOR INITIALIZATION =========
                 window.EditorTools.UIManager.init();
 
                 const mainContentWrapper = document.getElementById('main-content-wrapper');
                 const treeViewRoot = document.getElementById('tree-view-root');
 
-                // Forward declaration for the callback
                 let inspectorCore;
                 let treeViewManager;
+                let propertiesPanel;
 
                 const historyManager = new window.EditorTools.HistoryManager(mainContentWrapper, () => {
                     const selectedElement = inspectorCore.getSelectedElement();
@@ -54,7 +53,7 @@
 
                 treeViewManager = new window.EditorTools.DomTreeViewManager(treeViewRoot, mainContentWrapper);
 
-                const propertiesPanel = new window.EditorTools.PropertiesPanelManager({
+                propertiesPanel = new window.EditorTools.PropertiesPanelManager({
                     panelCodigo: document.getElementById('panel-codigo'),
                     contenidoCodigo: document.getElementById('contenido-codigo'),
                     analysisContainer: document.getElementById('element-analysis-in-code'),
@@ -62,9 +61,7 @@
                     elementAnalysisToggle: document.getElementById('element-analysis-toggle')
                 });
 
-                const stylePanelManager = new window.EditorTools.StylePanelManager({
-                    historyManager: historyManager
-                });
+                const stylePanelManager = new window.EditorTools.StylePanelManager({ historyManager: historyManager });
 
                 inspectorCore = new window.EditorTools.InspectorCore({
                     treeViewManager: treeViewManager,
@@ -74,6 +71,7 @@
                 });
 
                 stylePanelManager.inspectorCore = inspectorCore;
+                propertiesPanel.inspectorCore = inspectorCore;
 
                 window.EditorTools.initPanels();
                 treeViewManager.init();
@@ -85,33 +83,52 @@
                 // 2. ========= TEST EXECUTION =========
 
                 const targetElement = document.getElementById('test-target');
-                const stylePanel = document.getElementById('style-panel');
+                const analysisContainer = document.getElementById('element-analysis-in-code');
 
-                // Step 1: Simulate selecting the element
+                // Step 1: Select the element
                 console.log('Simulating click on target element...');
                 targetElement.click();
+                await wait(100); // Allow UI to update
 
-                assert(inspectorCore.getSelectedElement() === targetElement, "Target element should be selected.");
-                assert(stylePanel && !stylePanel.classList.contains('hidden'), 'Style panel should be visible after selection.');
+                // Step 2: Find the editable span for data-label and edit it
+                const attributeName = 'data-label';
+                const newLabelValue = 'Updated Via Test';
 
-                // Step 2: Change a style and save state
-                console.log('Changing style and saving state...');
-                targetElement.style.backgroundColor = 'rgb(255, 0, 0)'; // red
-                historyManager.saveState();
+                let editableSpan = analysisContainer.querySelector(`span[data-attribute-name="${attributeName}"]`);
+                assert(editableSpan, `Editable span for '${attributeName}' should exist.`);
+                assert(editableSpan.textContent === 'Initial Label', "Editable span should show the initial value.");
 
-                assert(historyManager.historyStack.length === 2, "History should have a new state.");
+                console.log(`Editing '${attributeName}' to be '${newLabelValue}'...`);
+                editableSpan.textContent = newLabelValue;
+                editableSpan.dispatchEvent(new FocusEvent('blur')); // Trigger the update
+                await wait(100);
 
-                // Step 3: Perform Undo
-                console.log('Performing undo...');
+                // Step 3: Verify the attribute was set on the actual DOM element
+                assert(targetElement.getAttribute(attributeName) === newLabelValue, "The element's attribute should be updated in the DOM.");
+
+                // Step 4: Deselect the element
+                console.log("Deselecting element...");
+                document.body.click();
+                await wait(100);
+
+                // Step 5: Reselect the element and verify persistence
+                console.log("Reselecting element...");
+                targetElement.click();
+                await wait(100);
+
+                editableSpan = analysisContainer.querySelector(`span[data-attribute-name="${attributeName}"]`);
+                assert(editableSpan, "Editable span should exist on reselection.");
+                assert(editableSpan.textContent === newLabelValue, "Editable span should show the persisted value on reselection.");
+
+                // Step 6: Test undo functionality
+                console.log("Testing undo...");
                 historyManager.undo();
+                await wait(100);
 
-                // Step 4: Verify the fix
-                console.log('Verifying state after undo...');
-                const freshTarget = document.getElementById('test-target'); // Re-fetch the element from the new DOM
-
-                assert(inspectorCore.getSelectedElement() === freshTarget, "Element should remain selected after undo.");
-                assert(stylePanel && !stylePanel.classList.contains('hidden'), 'Style panel should REMAIN visible after undo.');
-                assert(freshTarget.style.backgroundColor !== 'rgb(255, 0, 0)', 'Style change should be reverted.');
+                editableSpan = analysisContainer.querySelector(`span[data-attribute-name="${attributeName}"]`);
+                assert(editableSpan, "Editable span should exist after undo.");
+                assert(editableSpan.textContent === 'Initial Label', "Undo should restore the original value in the UI.");
+                assert(targetElement.getAttribute(attributeName) === 'Initial Label', "Undo should restore the original attribute in the DOM.");
 
                 console.log('--- Test Complete ---');
                 if(testPassed) {
